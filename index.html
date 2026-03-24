@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Шежіре - Шапырашты (Ыстық)</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            overflow-x: auto;
+            overflow-y: hidden; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            scroll-behavior: smooth;
+        }
+
+        #tree-wrapper {
+            display: flex;
+            gap: 70px;
+            padding: 150px;
+            align-items: center;
+        }
+
+        .level {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .node {
+            background: #f3f4f6;
+            color: #111827;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-weight: 600;
+            z-index: 10;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .node:hover {
+            transform: scale(1.08);
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .node.active {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+            border-color: #34d399;
+        }
+
+        .node[data-special="hero"] {
+            background: #fbbf24;
+            color: #78350f;
+            border-color: #d97706;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateX(-30px);
+            animation: slideRight 0.5s ease forwards;
+        }
+
+        @keyframes slideRight {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        ::-webkit-scrollbar { height: 10px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="tree-wrapper"></div>
+
+<script>
+const shezhireData = {
+    "Алаш": ["Ұлы жүз", "Орта жүз", "Кіші жүз", "Жүзден тыс"],
+    
+    // ҰЛЫ ЖҮЗ
+    "Ұлы жүз": ["Қаңлы", "Шанышқылы", "Сіргелі", "Шақшам", "Сарыүйсін", "Шапырашты", "Жалайыр", "Ысты", "Ошақты", "Албан", "Суан", "Дулат"],
+
+    "Шапырашты": ["Ыстық (Шам)"],
+    "Ыстық (Шам)": ["Малдыстық", "Желдістіқ", "Қалдыстық"],
+    
+    // МАЛДЫСТЫҚ ТАРМАҒЫ
+    "Малдыстық": ["Екей", "Еміл"],
+    "Екей": ["Жәрімбет", "Бәйімбет"],
+    "Еміл": ["Жайық", "Есқожа"],
+    
+    // ЖӘРІМБЕТ (Балалары тікелей шығады)
+    "Жәрімбет": ["Бертіс", "Ақтөбет", "Әжібай", "Әлти", "Баянай"],
+
+    "Әжібай": ["Қосай"],
+    "Қосай": ["Ыстыбай", "Дәуірбай"],
+    "Ыстыбай": ["Ақмырза-Аққосай"],
+    "Ақмырза-Аққосай": ["Байбол", "Қойбақ", "Қасабай", "Темір", "Малкелді"],
+    "Байбол": ["Қуат", "Мөлжігіт", "Қонақ", "Малдыбай", "Сырымбет"],
+    "Қуат": ["Рысқұл", "Төле", "Қуаш"],
+    "Рысқұл": ["Әліке", "Манабай"],
+    "Манабай": ["Досжан", "Дәуренбай", "Ахмет"],
+    
+    // АХМЕТ ТАРМАҒЫ
+    "Ахмет": ["Әлімбек", "Жұмабай", "Жақыпбек"],
+    "Әлімбек": ["Жанат", "Серік", "Марат"],
+    "Жанат": ["Талғат"],
+    "Серік": ["Азамат", "Асқат", "Шыңғыс", "Искандер", "Нурдаулет"],
+    "Марат": ["Қайрат","Алмас"],
+    
+    // ЖАҚЫПБЕК ТАРМАҒЫ
+    "Жақыпбек": ["Асқар", "Даулет"],
+    "Асқар": ["Алихан", "Әмір"],
+    
+    "Жұмабай": ["Болат"],
+    "Болат": ["Данияр", "Ұлан", "Елнұр"],
+
+    // ЕМІЛ -> ЕСҚОЖА -> ҚАРАСАЙ БАТЫР
+    "Есқожа": ["Алысай", "Алтынай", "Шуаш"],
+    "Алтынай": ["Қарасай"],
+    "Қарасай": ["Еркен", "Төркен", "Әуез", "Өтеп", "Түрікпен", "Көшек"],
+
+    // ЖЕЛДІ ЖӘНЕ ҚАЛДЫ
+    "Желдістіқ": ["Асыл", "Шыбыл"],
+    "Қалдыстық": ["Айқым"],
+    "Айқым": ["Қайдауыл", "Сейітқұл", "Қалқаман"],
+    
+    "Сарыүйсін": ["Қалша", "Жақып"]
+};
+
+const wrapper = document.getElementById("tree-wrapper");
+
+function addLevel(names, levelIndex) {
+    const levelDiv = document.createElement("div");
+    levelDiv.className = "level";
+    levelDiv.id = "level-" + levelIndex;
+
+    names.forEach((name, i) => {
+        const node = document.createElement("div");
+        node.className = "node fade-in";
+        node.innerText = name;
+        node.style.animationDelay = (i * 0.04) + "s";
+
+        if (name === "Қарасай") node.setAttribute("data-special", "hero");
+
+        node.onclick = function() {
+            clearLevels(levelIndex + 1);
+            Array.from(levelDiv.children).forEach(n => n.classList.remove('active'));
+            node.classList.add('active');
+
+            if (shezhireData[name]) {
+                addLevel(shezhireData[name], levelIndex + 1);
+                setTimeout(() => {
+                    const nextLevel = document.getElementById("level-" + (levelIndex + 1));
+                    if (nextLevel) nextLevel.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }, 100);
+            }
+        };
+        levelDiv.appendChild(node);
+    });
+    wrapper.appendChild(levelDiv);
+}
+
+function clearLevels(fromIndex) {
+    let i = fromIndex;
+    while (document.getElementById("level-" + i)) {
+        document.getElementById("level-" + i).remove();
+        i++;
+    }
+}
+
+addLevel(["Алаш"], 0);
+</script>
+</body>
+</html>
