@@ -2,7 +2,7 @@
 <html lang="kk">
 <head>
     <meta charset="UTF-8">
-    <title>Шежіре - Шапырашты</title>
+    <title>Шежіре - Шапырашты (Жеті Ата)</title>
     <style>
         body {
             background: #0f172a;
@@ -67,6 +67,51 @@
             border-color: #d97706;
         }
 
+        /* Жеті ата панелінің стилі */
+        #ancestors-panel {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.95);
+            padding: 15px 40px;
+            border-radius: 100px;
+            border: 2px solid #10b981;
+            display: none;
+            flex-wrap: nowrap;
+            gap: 12px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            align-items: center;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .ancestor-label {
+            color: #fbbf24;
+            font-weight: bold;
+            margin-right: 10px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .ancestor-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ancestor-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .ancestor-arrow {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
         .fade-in {
             opacity: 0;
             transform: translateX(-30px);
@@ -85,27 +130,20 @@
 <body>
 
 <div id="tree-wrapper"></div>
+<div id="ancestors-panel"></div>
 
 <script>
 const shezhireData = {
     "Алаш": ["Ұлы жүз", "Орта жүз", "Кіші жүз", "Жүзден тыс"],
-    
-    // ҰЛЫ ЖҮЗ
     "Ұлы жүз": ["Қаңлы", "Шанышқылы", "Сіргелі", "Сарыүйсін", "Шапырашты", "Жалайыр", "Ысты", "Ошақты", "Албан", "Суан", "Дулат"],
-
     "Шапырашты": ["Ыстық (Шам)"],
     "Ыстық (Шам)": ["Малдыыстық", "Желдіыстық", "Қалдыыстық"],
-    
-    // МАЛДЫСТЫҚ
     "Малдыыстық": ["Екей", "Еміл"],
     "Екей": ["Жәрімбет", "Бәйімбет"],
     "Бәйімбет": ["Ақет", "Морға", "Тілеуімбет", "Қарамерген", "Алдаберген", "Қызылқамшы (Тыныбек)", "Жанас", "Қожабек", "Қамаушы(Бекпенбет)", "Шындәулет", "Мұғал"],
     "Еміл": ["Жайық", "Есқожа"],
     "Жайық": ["Ермен", "Сүйіндік", "Сиыршы", "Сәтбек", "Тайторы"],
-    
-    // ЖӘРІМБЕТ
     "Жәрімбет": ["Бертіс", "Ақтөбет", "Әжібай", "Әлти", "Баянай"],
-
     "Әжібай": ["Қосай"],
     "Қосай": ["Ыстыбай", "Дәуірбай"],
     "Ыстыбай": ["Ақмырза-Аққосай"],
@@ -114,32 +152,21 @@ const shezhireData = {
     "Қуат": ["Рысқұл", "Төле", "Қуаш"],
     "Рысқұл": ["Әліке", "Манабай"],
     "Манабай": ["Досжан", "Дәуренбай", "Ахмет"],
-    
-    // АХМЕТ
     "Ахмет": ["Әлімбек", "Жұмабай", "Жақыпбек"],
     "Әлімбек": ["Жанат", "Серік", "Марат"],
     "Жанат": ["Талғат"],
     "Серік": ["Азамат", "Асқат", "Шыңғыс", "Искандер", "Нурдаулет"],
     "Марат": ["Қайрат", "Алмас"],
-    
-    // ЖАҚЫПБЕК
     "Жақыпбек": ["Асқар", "Дәулет"],
     "Асқар": ["Алихан", "Әмір"],
-    
     "Жұмабай": ["Болат"],
     "Болат": ["Данияр", "Ұлан", "Елнұр"],
-
-    // ЕМІЛ -> ЕСҚОЖА
     "Есқожа": ["Алысай", "Алтынай", "Шуаш"],
     "Алтынай": ["Қарасай"],
     "Қарасай": ["Еркен", "Төркен", "Әуез", "Өтеп", "Түрікпен", "Көшек"],
-
-    // ЖЕЛДІСТЫҚ
     "Желдіыстық": ["Асыл", "Шыбыл"],
     "Асыл": ["Әжіке", "Кеней", "Орынбет", "Құлан", "Жанай", "Теке", "Төлеміс"],
     "Шыбыл": ["Жәдік", "Малай", "Байыс", "Ибақ", "Сары"],
-    
-    // ҚАЛДЫСТЫҚ
     "Қалдыыстық": ["Айқым"],
     "Айқым": ["Қайдауыл", "Сейітқұл", "Қалқаман"],
     "Қайдауыл": ["Қарамолда", "Байымбет", "Жарымбет", "Сырымбет", "Медет", "Жолай"],
@@ -148,6 +175,49 @@ const shezhireData = {
 };
 
 const wrapper = document.getElementById("tree-wrapper");
+const panel = document.getElementById("ancestors-panel");
+
+// Кері бағытта ата-аналарды іздеу алгоритмі
+function findPath(targetName) {
+    let resultPath = [];
+    function search(current, path) {
+        if (current === targetName) {
+            resultPath = [...path, current];
+            return true;
+        }
+        let children = shezhireData[current];
+        if (children) {
+            for (let child of children) {
+                if (search(child, [...path, current])) return true;
+            }
+        }
+        return false;
+    }
+    search("Алаш", []);
+    return resultPath;
+}
+
+// Жеті атаны көрсету функциясы
+function updateSevenAncestors(name) {
+    const path = findPath(name);
+    if (path.length > 0) {
+        panel.style.display = "flex";
+        const reversedPath = [...path].reverse(); // Өзінен бастап жоғары қарай
+        
+        let html = `<div class="ancestor-label">Жеті ата:</div>`;
+        reversedPath.forEach((n, index) => {
+            if (index < 7) { // Тек 7 ұрпақ
+                html += `
+                    <div class="ancestor-item">
+                        <span class="ancestor-name">${n}</span>
+                        ${(index < 6 && index < reversedPath.length - 1) ? '<span class="ancestor-arrow">←</span>' : ''}
+                    </div>
+                `;
+            }
+        });
+        panel.innerHTML = html;
+    }
+}
 
 function addLevel(names, levelIndex) {
     const levelDiv = document.createElement("div");
@@ -166,6 +236,9 @@ function addLevel(names, levelIndex) {
             clearLevels(levelIndex + 1);
             Array.from(levelDiv.children).forEach(n => n.classList.remove('active'));
             node.classList.add('active');
+
+            // Жеті атаны жаңарту
+            updateSevenAncestors(name);
 
             if (shezhireData[name]) {
                 addLevel(shezhireData[name], levelIndex + 1);
