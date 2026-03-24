@@ -3,111 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <title>Шежіре - Шапырашты</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            overflow-x: auto;
+            overflow-y: hidden; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            scroll-behavior: smooth;
+        }
 
-<style>
-body {
-    background: #0f172a;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    margin: 0;
-    overflow-x: auto;
-    overflow-y: hidden; 
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    scroll-behavior: smooth;
-}
+        #tree-wrapper {
+            display: flex;
+            gap: 70px;
+            padding: 150px;
+            align-items: center;
+        }
 
-#tree-wrapper {
-    display: flex;
-    gap: 70px;
-    padding: 150px;
-    align-items: center;
-}
+        .level {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
 
-/* уровень */
-.level {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    justify-content: center;
-    position: relative;
-}
+        .node {
+            background: #f3f4f6;
+            color: #111827;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-weight: 600;
+            z-index: 10;
+            text-align: center;
+            border: 2px solid transparent;
+        }
 
-/* горизонтальная линия */
-.level::before {
-    content: "";
-    position: absolute;
-    left: -40px;
-    top: 50%;
-    width: 40px;
-    height: 2px;
-    background: rgba(255,255,255,0.25);
-}
+        .node:hover {
+            transform: scale(1.08);
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
 
-/* вертикальная линия */
-.level::after {
-    content: "";
-    position: absolute;
-    left: -40px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: rgba(255,255,255,0.15);
-}
+        .node.active {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+            border-color: #34d399;
+        }
 
-/* убрать линии у первого уровня */
-#level-0::before,
-#level-0::after {
-    display: none;
-}
+        .node[data-special="hero"] {
+            background: #fbbf24;
+            color: #78350f;
+            border-color: #d97706;
+        }
 
-.node {
-    background: #f3f4f6;
-    color: #111827;
-    padding: 10px 25px;
-    border-radius: 50px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    position: relative;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    font-weight: 600;
-    z-index: 10;
-    text-align: center;
-    border: 2px solid transparent;
-}
+        .fade-in {
+            opacity: 0;
+            transform: translateX(-30px);
+            animation: slideRight 0.5s ease forwards;
+        }
 
-.node:hover {
-    transform: scale(1.08);
-    background: #10b981;
-    color: white;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
-}
+        @keyframes slideRight {
+            to { opacity: 1; transform: translateX(0); }
+        }
 
-.node.active {
-    background: #10b981;
-    color: white;
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
-    border-color: #34d399;
-}
-
-.fade-in {
-    opacity: 0;
-    transform: translateX(-30px);
-    animation: slideRight 0.5s ease forwards;
-}
-
-@keyframes slideRight {
-    to { opacity: 1; transform: translateX(0); }
-}
-
-::-webkit-scrollbar { height: 10px; }
-::-webkit-scrollbar-track { background: #1e293b; }
-::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-</style>
+        ::-webkit-scrollbar { height: 10px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    </style>
 </head>
-
 <body>
 
 <div id="tree-wrapper"></div>
@@ -115,15 +89,21 @@ body {
 <script>
 const shezhireData = {
     "Алаш": ["Ұлы жүз", "Орта жүз", "Кіші жүз", "Жүзден тыс"],
+    
+    // ҰЛЫ ЖҮЗ
     "Ұлы жүз": ["Қаңлы", "Шанышқылы", "Сіргелі", "Сарыүйсін", "Шапырашты", "Жалайыр", "Ысты", "Ошақты", "Албан", "Суан", "Дулат"],
 
     "Шапырашты": ["Ыстық (Шам)"],
     "Ыстық (Шам)": ["Малдыстық", "Желдістық", "Қалдыстық"],
-
+    
+    // МАЛДЫСТЫҚ
     "Малдыстық": ["Екей", "Еміл"],
     "Екей": ["Жәрімбет", "Бәйімбет"],
+    "Бәйімбет": ["Ақет", "Морға", "Тілеуімбет", "Қарамерген", "Алдаберген", "Қызылқамшы (Тыныбек)", "Жанас", "Қожабек", "Қамаушы(Бекпенбет)", "Шындәулет", "Мұғал"],
     "Еміл": ["Жайық", "Есқожа"],
-
+    "Жайық": ["Ермен", "Сүйіндік", "Сиыршы", "Сәтбек", "Тайторы"],
+    
+    // ЖӘРІМБЕТ
     "Жәрімбет": ["Бертіс", "Ақтөбет", "Әжібай", "Әлти", "Баянай"],
 
     "Әжібай": ["Қосай"],
@@ -134,19 +114,32 @@ const shezhireData = {
     "Қуат": ["Рысқұл", "Төле", "Қуаш"],
     "Рысқұл": ["Әліке", "Манабай"],
     "Манабай": ["Досжан", "Дәуренбай", "Ахмет"],
-
+    
+    // АХМЕТ
     "Ахмет": ["Әлімбек", "Жұмабай", "Жақыпбек"],
+    "Әлімбек": ["Жанат", "Серік", "Марат"],
+    "Жанат": ["Талғат"],
+    "Серік": ["Азамат", "Асқат", "Шыңғыс", "Искандер", "Нурдаулет"],
+    "Марат": ["Қайрат", "Алмас"],
+    
+    // ЖАҚЫПБЕК
+    "Жақыпбек": ["Асқар", "Дәулет"],
+    "Асқар": ["Алихан", "Әмір"],
+    
     "Жұмабай": ["Болат"],
     "Болат": ["Данияр", "Ұлан", "Елнұр"],
 
+    // ЕМІЛ -> ЕСҚОЖА
     "Есқожа": ["Алысай", "Алтынай", "Шуаш"],
     "Алтынай": ["Қарасай"],
     "Қарасай": ["Еркен", "Төркен", "Әуез", "Өтеп", "Түрікпен", "Көшек"],
 
+    // ЖЕЛДІСТЫҚ
     "Желдістық": ["Асыл", "Шыбыл"],
     "Асыл": ["Әжіке", "Кеней", "Орынбет", "Құлан", "Жанай", "Теке", "Төлеміс"],
     "Шыбыл": ["Жәдік", "Малай", "Байыс", "Ибақ", "Сары"],
-
+    
+    // ҚАЛДЫСТЫҚ
     "Қалдыстық": ["Айқым"],
     "Айқым": ["Қайдауыл", "Сейітқұл", "Қалқаман"],
     "Қайдауыл": ["Қарамолда", "Бәйімбет", "Жәрімбет", "Сырымбет", "Медет", "Жолай"],
@@ -161,13 +154,13 @@ function addLevel(names, levelIndex) {
     levelDiv.className = "level";
     levelDiv.id = "level-" + levelIndex;
 
-    levelDiv.style.marginLeft = levelIndex === 0 ? "0px" : "40px";
-
     names.forEach((name, i) => {
         const node = document.createElement("div");
         node.className = "node fade-in";
         node.innerText = name;
         node.style.animationDelay = (i * 0.04) + "s";
+
+        if (name === "Қарасай") node.setAttribute("data-special", "hero");
 
         node.onclick = function() {
             clearLevels(levelIndex + 1);
@@ -182,10 +175,8 @@ function addLevel(names, levelIndex) {
                 }, 100);
             }
         };
-
         levelDiv.appendChild(node);
     });
-
     wrapper.appendChild(levelDiv);
 }
 
@@ -199,6 +190,5 @@ function clearLevels(fromIndex) {
 
 addLevel(["Алаш"], 0);
 </script>
-
 </body>
 </html>
